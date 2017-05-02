@@ -48,7 +48,8 @@ fn main() {
             Ok(num) => num,
             Err(_) => continue,
         };
-
+        
+        // "{}" 变量 guess 占位符 
         println!("You guessed: {}", guess);
 
         match guess.cmp(&secret_number) {

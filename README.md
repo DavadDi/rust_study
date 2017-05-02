@@ -1,6 +1,6 @@
 # Rust 简明教程
 
-## 1. 安装
+## 1. Install
 
 Linux|Mac
 	
@@ -23,7 +23,12 @@ Version && Doc
 	$ rustup doc --book  or rustup doc --std
 	
 
-## 2. 语法
+## 2. Tutorial
+
+第二版图书：
+
+* [Book Eng](http://rust-lang.github.io/book/second-edition/ch01-00-introduction.html)
+* [Rust 程序设计语言（第二版）](https://kaisery.gitbooks.io/trpl-zh-cn/content/)
 
 ### 2.1 Hello Rust
  	
@@ -103,12 +108,11 @@ Cargo 是 Rust 的构建系统和包管理工具。
     1. 忽略 Cargo.lock 文件并计算出所有符合 Cargo.toml 中规格的最新版本。
 	2. 如果成功了，Cargo 会把这些版本写入 Cargo.lock 文件。
   
-  rust 使用在线的 crates.io 库管理库，因为 **rand** 不是 rust 标准库，因此使用 ** cargo build**的时候会从网络上下载对应的依赖库。Crates.io是 Rust 生态环境中的开发者们向他人贡献他们的开源 Rust 项目的地方。
+  rust 使用在线的 crates.io 库管理库，因为 **rand** 不是 rust 标准库，因此使用 **cargo build** 的时候会从网络上下载对应的依赖库。Crates.io是 Rust 生态环境中的开发者们向他人贡献他们的开源 Rust 项目的地方。
   
   完整代码如下：
   
 ```rust
-
 // 用于声明依赖外部库 rand
 extern crate rand;
 
@@ -120,32 +124,32 @@ use rand::Rng;
 fn main() {
     println!("Guess the number!");
 
- 	 // let 为 rust 变量赋值的关键字， 默认情况为赋值的变量是 immutable，不能够被修改 
+	// let 为 rust 变量赋值的关键字， 默认情况为赋值的变量是 immutable，不能够被修改 
     let secret_number = rand::thread_rng().gen_range(1, 101);  // [1, 101)
 
-     // loop 对应于无限循环
+	// loop 对应于无限循环
     loop {
         println!("Please input your guess.");
 
-		  // 定义一个 String 变量，但是该变量是可以是 mutable，值可以被修改
-		  // 完整类型为： Struct std::string::String
+		// 定义一个 String 变量，但是该变量是可以是 mutable，值可以被修改
+		// 完整类型为： Struct std::string::String
         let mut guess = String::new();
 
-		  // 采用 std::io::stdin().read_line() 函数，从用户输入读取变量，并赋值到 guess 变量中。  
-		  // pub fn stdin() -> Stdin (pub struct Stdin { /* fields omitted */ })
-		  // fn Stdin::read_line(&self, buf: &mut String) -> Result<usize>
-		  // type Result<T> = Result<T, Error>;
-		  
-		  // std::result::Result
-		  // pub enum Result<T, E> {
-    	  //	Ok(T),
-    	  //	Err(E),
-		  //}
-		  
-		  // fn expect(self, msg: &str) -> T
-		  // Panics if the value is an Err, with a panic message including the passed message, and the content of the Err.
+		// 采用 std::io::stdin().read_line() 函数，从用户输入读取变量，并赋值到 guess 变量中。  
+		// pub fn stdin() -> Stdin (pub struct Stdin { /* fields omitted */ })
+		// fn Stdin::read_line(&self, buf: &mut String) -> Result<usize>
+		// type Result<T> = Result<T, Error>;
+		// std::result::Result
+		// pub enum Result<T, E> {
+		//		Ok(T),
+		//		Err(E),
+		//}
+		
+		// fn expect(self, msg: &str) -> T
+		// Panics if the value is an Err, with a panic message including the passed message, and the content of the Err.
 
-        io::stdin().read_line(&mut guess)    // &mut guess 中的 &mut 则用于指明，guess是可以修改变量
+		// &mut guess 中的 &mut 则用于指明，guess是可以修改变量
+        io::stdin().read_line(&mut guess)    
             .expect("Failed to read line");  // .expect 为 readline 出错后的，panic 打印的信息
             
         // guess: u32 用于指明 guess变量的类型为u32
@@ -172,7 +176,6 @@ fn main() {
         }
     }
 }
-
 ```
 
 运行程序：
@@ -201,5 +204,109 @@ fn main() {
 	cargo doc --open    # 会从网络上下载依赖库 rand 的doc，并在本地浏览器打开
   
   
+## 3. Syntax and Semantics
+
+### 3.1 Variable Bindings
+
+```rust
+
+let x = 5;
+let (x, y) = (1, 2);
+let x: i32 = 5;          // 指定 x 类型为 i32
+let x = 5; // x: i32     // 通过 comment 方式指明 x 的类型为 i32
+
+```
+
+rust 的 **bindings are immutable**， 默认 rust 变量绑定是不可变，再次赋值会编译报错。
+
+```rust
+let mut x = 5; // mut x: i32    // x 为 mutable 变量，可以进行再次赋值
+x = 10;
+```
+
+rust 允许 变量进行覆盖（shadowed）
+
+```rust
+let y = 4;
+let y = "I can also be bound to text!"; // `y` is now of a different type.
+```
+
+Rust Const: 类型是必须出现，例如 u32， 不能使用 let 定义，需要使用 const 
+
+```rust
+const MAX_POINTS: u32 = 100_000;
+```
+
+rust 是 静态类型语言，在编译阶段必须知道所有变量的类型。
+
+```rust
+let guess: u32 = "42".parse().expect("Not a number!");
+```
+
+guess: u32 中的 u32则是帮助确定变量类型。
+
+#### Scalar Types:
+
+* integers
+* floating-point numbers
+* booleans
+* characters.
+
+##### Integer Types in Rust
+
+<table><thead><tr><td> Length </td><td> Signed </td><td> Unsigned </td></tr></thead>
+<tr><td> 8-bit  </td><td> i8     </td><td> u8       </td></tr>
+<tr><td> 16-bit </td><td> i16    </td><td> u16      </td></tr>
+<tr><td> 32-bit </td><td> i32    </td><td> u32      </td></tr>
+<tr><td> 64-bit </td><td> i64    </td><td> u64      </td></tr>
+<tr><td> arch   </td><td> isize  </td><td> usize    </td></tr>
+</table>
+
+
+##### Integer Literals in Rust
+<table><thead><tr><td> Number literals  </td><td> Example       </td></tr></thead>
+<tr><td> Decimal          </td><td> <code>98_222</code>      </td></tr>
+<tr><td> Hex              </td><td> <code>0xff</code>        </td></tr>
+<tr><td> Octal            </td><td> <code>0o77</code>        </td></tr>
+<tr><td> Binary           </td><td> <code>0b1111_0000</code> </td></tr>
+<tr><td> Byte (<code>u8</code> only) </td><td> <code>b'A'</code>        </td></tr>
+</table>
+
+#### Compound types
+* tuples (类型可以不同)
+* arrays (类型必须相同)
+
+#### Tuples
+```rust
+ let tup: (i32, f64, u8) = (500, 6.4, 1);
+ 
+ let x = tup.0
+ let y = tup.1
+ let z = tup.2
+ 
+ let (x, y, z) = tup;
+ 
+```
+
+#### Array
+
+Allocated on the stack
+
+```rust
+let a = [1, 2, 3, 4, 5];
+
+let first = a[0];
+let second = a[1];
+
+let noexist = a[10] // compile ok, but run cause a panic
+    
+let months = ["January", "February", "March", "April", "May", "June", "July",
+              "August", "September", "October", "November", "December"];
+
+```
+
+对于 Array 越界访问，编译的时候不会报错，但是运行的时候会 panic。 
+
+
 
 
