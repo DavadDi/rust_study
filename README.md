@@ -529,7 +529,7 @@ fn makes_copy(some_integer: i32) { // some_integer comes into scope.
 
 不采用 References 的版本：
 
-```
+```rust
 fn main() {
     let s1 = String::from("hello");
 
@@ -618,4 +618,45 @@ A data race is a particular type of race condition in which these three behavior
 	* 一个可变引用。
 	* 任意数量的不可变引用。
 * 引用必须总是有效的。
+
+
+### 4.3 Slices
+
+slice数据类型没有所有权，允许引用集合中的一段连续元素序列，而不是引用整个集合。
+
+```rust
+fn first_word(s: &str) -> &str {
+     let bytes = s.as_bytes();
+
+     for (i, &item) in bytes.iter().enumerate() {
+         if item == b' ' {
+             return &s[0..i];
+         }
+     }
+
+     &s[..]
+}
+
+fn main() {
+    let my_string = String::from("hello world");
+
+    // first_word works on slices of `String`s
+    let word = first_word(&my_string[..]);
+    println!("word {}", word);
+
+    let my_string_literal = "hello world";
+
+    // first_word works on slices of string literals
+    let word = first_word(&my_string_literal[..]);
+    println!("word {}", word);
+
+    // since string literals *are* string slices already,
+    // this works too, without the slice syntax!
+    let word = first_word(my_string_literal);
+
+    println!("word {}", word);
+}
+```
+
+
 
