@@ -409,9 +409,11 @@ Expressions 计算并产生一个值: x + 1
 ```
 
 
-### 4 Understanding Ownership
+## 4. Understanding Ownership
 
 Ownership 是 Rust 最独特的功能，它使得 Rust 可以无需垃圾回收（garbage collector）就能保障内存安全。
+
+### 4.1 Ownership
 
 #### Ownership Rules
 
@@ -519,3 +521,101 @@ fn makes_copy(some_integer: i32) { // some_integer comes into scope.
 } // Here, some_integer goes out of scope. Nothing special happens.
 
 ```
+
+
+### 4.2 References && Borrowing
+
+一般情况下函数参入参数或者返回值都发生了ownership的转移，对于编写程序控制非常不方便，References（引用）则就是避免ownership在函数使用过程中发生转移而设。
+
+不采用 References 的版本：
+
+```
+fn main() {
+    let s1 = String::from("hello");
+
+    let (s2, len) = calculate_length(s1);
+
+    println!("The length of '{}' is {}.", s2, len);
+}
+
+fn calculate_length(s: String) -> (String, usize) {
+    let length = s.len(); // len() returns the length of a String.
+
+    (s, length)
+}
+```
+
+采用 References 的版本，代码更加整洁， 将获取引用作为函数参数称为Borrowing。
+
+```rust
+
+fn main() {
+    let s1 = String::from("hello");
+
+    let len = calculate_length(&s1);
+
+    println!("The length of '{}' is {}.", s1, len);
+}
+
+// 注意当前参数前加了 “&”， 表明 使用值但不获取它的所有权
+fn calculate_length(s: &String) -> usize {  // s is a reference to a String
+    s.len()
+}
+// Here, s goes out of scope. But because it does not have ownership of what
+// it refers to, nothing happens.
+
+```
+
+Mutable References，可以对于传入的变量进行修改：
+
+```rust
+fn main() {
+    let mut s = String::from("hello");
+	
+	// 调用的时候多加一个 mut 参数
+    change(&mut s);
+}
+
+// Mutable References，需要函数参数前加入 &mut
+fn change(some_string: &mut String) {
+    some_string.push_str(", world");
+}
+```
+
+在特定作用域中的特定数据有且只有一个Mutable References。
+
+```rust
+let mut s = String::from("hello");
+
+let r1 = &mut s;
+let r2 = &mut s;  // Error, 存在了两个 Mutable References。
+
+```
+变通的实现：
+
+```rust
+let mut s = String::from("hello");
+
+{
+    let r1 = &mut s;
+
+} // r1 goes out of scope here, so we can make a new reference with no problems.
+
+let r2 = &mut s;
+```
+
+A data race is a particular type of race condition in which these three behaviors occur:
+
+* Two or more pointers access the same data at the same time.
+* At least one of the pointers is being used to write to the data.
+* There’s no mechanism being used to synchronize access to the data.
+
+
+
+#### Reference Rules
+
+* 在任意给定时间，只能拥有如下中的一个：
+	* 一个可变引用。
+	* 任意数量的不可变引用。
+* 引用必须总是有效的。
+
