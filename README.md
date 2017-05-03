@@ -407,3 +407,115 @@ Expressions 计算并产生一个值: x + 1
     }
 
 ```
+
+
+### 4 Understanding Ownership
+
+Ownership 是 Rust 最独特的功能，它使得 Rust 可以无需垃圾回收（garbage collector）就能保障内存安全。
+
+#### Ownership Rules
+
+* Each value in Rust has a variable that’s called its owner. 每个值都有一个称作owner的变量。
+* There can only be one owner at a time.  每次只能有一个owner。
+* When the owner goes out of scope, the value will be dropped. 当owner离开作用域，值被丢弃。
+
+
+#### Ways Variables and Data Interact: Move (Shallow Copy)
+
+```rust
+	let x = 5;
+	let y = x;  
+	
+	println!("x {} y {}", x,y)  // 因为x, y都为简单类型 scalar，分配在栈中，所以 x,y 仍然可以用
+```
+
+```rust
+let s1 = String::from("hello");
+let s2 = s1;
+
+println!("{}", s1);  // !ERROR, 因为 s1有内存分配在了heap上， s1 已经将 owner 转移到了s2，那么s1，将不再能够使用
+```
+
+Rust 永远也不会自动创建数据的“深拷贝”。因此，任何自动的复制可以被认为对运行时性能影响较小。
+
+#### Ways Variables and Data Interact: Clone  (Deep Copy)
+
+```rust
+let s1 = String::from("hello");
+let s2 = s1.clone();
+
+println!("s1 = {}, s2 = {}", s1, s2);
+```
+
+#### Stack-Only Data: Copy
+
+```rust
+let x = 5;
+let y = x;
+
+println!("x = {}, y = {}", x, y);
+```
+
+Rust 有一个叫做Copy trait 的特殊注解，可以用在类似整型这样的储存在栈上的类型。如果一个类型拥有Copy trait，一个旧的变量在（重新）赋值后仍然可用。Rust 不允许自身或其任何部分实现了 Drop trait 的类型使用Copy trait。如果我们对其值离开作用域时需要特殊处理的类型使用Copy注解，将会出现一个编译时错误。
+
+那么什么类型是Copy的呢？可以查看给定类型的文档来确认，不过作为一个通用的规则，任何简单标量值的组合可以是Copy的，任何不需要分配内存或类似形式资源的类型是Copy的，如下是一些Copy的类型：
+
+* 所有整数类型，比如u32。
+* 布尔类型，bool，它的值是true和false。
+* 所有浮点数类型，比如f64。
+* 元组，当且仅当其包含的类型也都是Copy的时候。(i32, i32)是Copy的，不过(i32, String)就不是。
+
+
+#### Ownership and Functions
+
+将值传递给函数在语言上与给变量赋值相似。向函数传递值可能会移动或者复制，就像赋值语句一样。返回值可以转移作用域。
+
+变量的所有权总是遵循相同的模式：将值赋值给另一个变量时move它，并且当持有堆中数据值的变量离开作用域时，如果数据的所有权没有被移动到另外一个变量时，其值将通过drop被清理掉。
+
+```rust
+fn main() {
+
+    // data move
+    let x = 5;
+    let y = x;  
+
+    // 以为x,y都为简单类型，分配在stack上，重新赋值后仍然可以使用
+    println!("x: {} y: {}", x, y);
+
+    let s1 = String::from("hello");
+    // move s1 owner to s2, s1不能够再使用
+    let s2 = s1;
+
+    // println!("s1 {}", s1)  // Error. s1 move to s2, 不再有效
+    println!("s2 {}", s2)
+
+
+    // data clone
+    let s1 = String::from("hello");
+    let s2 = s1.clone();
+
+    println!("s1 = {}, s2 = {}", s1, s2); // ok, use clone
+    
+    // 函数参数和返回值都会发生ownership的转移
+    let s = String::from("hello");  // s comes into scope.
+    takes_ownership(s);             // s's value moves into the function...
+                                    // ... and so is no longer valid here.
+    
+    let x = 5;                      // x comes into scope.
+    makes_copy(x);                  // x would move into the function,
+                                    // but i32 is Copy, so it’s okay to still
+                                    // use x afterward.
+}// Here, x goes out of scope, then s. But since s's value was moved, nothing
+// special happens.
+
+
+fn takes_ownership(some_string: String) { // some_string comes into scope.
+    println!("{}", some_string);
+} // Here, some_string goes out of scope and `drop` is called. The backing
+  // memory is freed.
+
+fn makes_copy(some_integer: i32) { // some_integer comes into scope.
+    println!("{}", some_integer);
+} // Here, some_integer goes out of scope. Nothing special happens.
+
+```
