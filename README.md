@@ -307,6 +307,103 @@ let months = ["January", "February", "March", "April", "May", "June", "July",
 
 对于 Array 越界访问，编译的时候不会报错，但是运行的时候会 panic。 
 
+### 3.2 Functions
+
+无返回值函数定义：
+
+	// no return value --> 注释 
+	fn print_number(x: i32) {
+    	println!("x is: {}", x);
+	}
+
+返回值函数定义：
+
+	fn sum(x: i32, y: i32) -> i32 {
+   		x + y
+	}
+
+rust中函数调用对于函数是否在调用者前定义没有要求，只要被定义了即可。在函数签名中，必须声明每个参数的类型。
 
 
+#### Statements And Expressions
 
+Statements 是执行一些操作但不返回值的指令:  let y = 6;
+
+Expressions 计算并产生一个值: x + 1
+
+
+### 3.3 Control Flow
+
+#### if express
+
+```rust
+    // if expression
+    let number = 3;
+
+    if number < 5 {
+        println!("condition was true");
+    } else {
+        println!("condition was false");
+    }
+
+    if number % 4 == 0 {
+        println!("number is divisible by 4");
+    } else if number % 3 == 0 {
+        println!("number is divisible by 3");
+    } else if number % 2 == 0 {
+        println!("number is divisible by 2");
+    } else {
+        println!("number is not divisible by 4, 3, or 2");
+    }
+
+    let condition = true;
+
+    // if and else 返回的类型必须一致
+    let number = if condition {
+        5
+    } else {
+        6
+    };
+
+    println!("The value of number is: {}", number);
+```
+
+
+#### loop && while
+```rust
+
+    let mut count = 0;
+
+    loop {
+        count = count + 1;
+        if count == 4 {
+            break;
+        }
+
+        println!("print under loop test");
+    }
+
+    // while expression
+    let mut number = 3;
+    while number != 0  {
+        println!("{}!", number);
+
+        number = number - 1;
+    }
+```
+
+#### for
+```rust
+
+    // for expression
+    let a = [10, 20, 30, 40, 50];
+
+    for element in a.iter() {
+        println!("the value is: {}", element);
+    }
+
+    for number in (1..4).rev() {
+        println!("{}!", number);
+    }
+
+```
