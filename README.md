@@ -659,4 +659,94 @@ fn main() {
 ```
 
 
+## 5. Struct 
+
+```rust
+struct User {
+    username: String,
+    email: String,
+    sign_in_count: u64,
+    active: bool,
+}
+
+let user1 = User {
+    email: String::from("someone@example.com"),
+    username: String::from("someusername123"),
+    active: true,
+    sign_in_count: 1,
+};
+
+println!("email {}", user1.email)
+
+```
+
+计算Rectangle面积的样例：
+
+```rust
+// 通过注解 [derive(Debug)] 实现println!中通过 {} 打印的功能
+#[derive(Debug)]
+struct Rectangle {
+    length: u32,
+    width: u32,
+}
+
+fn main() {
+    let rect1 = Rectangle { length: 50, width: 30 };
+
+    println!(
+        "The area of the rectangle is {} square pixels.", area(&rect1)
+    );
+    
+    // 通过增加 trait 的方式为rect1，增加打印的信息  注意： {:?}
+    println!("rec {:?}", rect1)
+    // output:
+    // rect1 is Rectangle { length: 50, width: 30 }
+    
+    println!("rec {:#?}", rect1)
+    // output 
+    // rect1 is Rectangle {
+    //    length: 50,
+    //    width: 30
+	 //  }
+}
+
+fn area(rectangle: &Rectangle) -> u32 {
+    rectangle.length * rectangle.width
+}
+```
+
+通过为 struct impl std::fmt::Display 方法实现：
+
+```rust
+
+struct Rectangle {
+    length: u32,
+    width: u32,
+}
+
+impl std::fmt::Display for Rectangle {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Rectangle: (length: {}, width: {})", self.length, self.width)
+    }
+}
+
+fn main() {
+    let rect1 = Rectangle { length: 50, width: 30 };
+
+    println!(
+        "The area of the rectangle is {} square pixels.", area(&rect1)
+    );
+    
+    // 通过实现 std::fmt::Display
+    println!("rec {}", rect1)
+}
+
+
+fn area(rectangle: &Rectangle) -> u32 {
+    rectangle.length * rectangle.width
+}
+```
+
+
+
 
