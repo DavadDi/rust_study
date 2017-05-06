@@ -1,4 +1,4 @@
-# Rust 简明教程
+# Rust 简明教程（1）
 
 ## 1. Install
 
@@ -29,6 +29,10 @@ Version && Doc
 
 * [Book Eng](http://rust-lang.github.io/book/second-edition/ch01-00-introduction.html)
 * [Rust 程序设计语言（第二版）](https://kaisery.gitbooks.io/trpl-zh-cn/content/)
+
+其他相关文档：
+
+* [Rust by Example](http://rustbyexample.com/)
 
 ### 2.1 Hello Rust
  	
@@ -661,6 +665,8 @@ fn main() {
 
 ## 5. Struct 
 
+### 5.1 Struct和方法定义
+
 ```rust
 struct User {
     username: String,
@@ -683,37 +689,38 @@ println!("email {}", user1.email)
 计算Rectangle面积的样例：
 
 ```rust
-// 通过注解 [derive(Debug)] 实现println!中通过 {} 打印的功能
 #[derive(Debug)]
 struct Rectangle {
     length: u32,
     width: u32,
 }
 
+impl std::fmt::Display for Rectangle {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Rectangle: (length: {}, width: {})", self.length, self.width)
+    }
+}
+
+// 将 area 方法定义成了 struct 的 method
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.length * self.width
+    }
+}
+
 fn main() {
     let rect1 = Rectangle { length: 50, width: 30 };
 
     println!(
-        "The area of the rectangle is {} square pixels.", area(&rect1)
+        "The area of the rectangle is {} square pixels.", rect1.area()
     );
     
-    // 通过增加 trait 的方式为rect1，增加打印的信息  注意： {:?}
-    println!("rec {:?}", rect1)
-    // output:
-    // rect1 is Rectangle { length: 50, width: 30 }
-    
-    println!("rec {:#?}", rect1)
-    // output 
-    // rect1 is Rectangle {
-    //    length: 50,
-    //    width: 30
-	 //  }
-}
+    // 通过实现 std::fmt::Display
+    println!("rec {}", rect1);
 
-fn area(rectangle: &Rectangle) -> u32 {
-    rectangle.length * rectangle.width
-}
-```
+    // 通过 derive(Debug) 的方式实现
+    println!("rec {:#?}", rect1);
+}```
 
 通过为 struct impl std::fmt::Display 方法实现：
 
@@ -728,6 +735,14 @@ impl std::fmt::Display for Rectangle {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "Rectangle: (length: {}, width: {})", self.length, self.width)
     }
+    
+    // call p1.distance(&p2);
+    fn distance(&self, other: &Point) -> f64 {
+       let x_squared = f64::powi(other.x - self.x, 2);
+       let y_squared = f64::powi(other.y - self.y, 2);
+
+       f64::sqrt(x_squared + y_squared)
+   }
 }
 
 fn main() {
@@ -746,6 +761,214 @@ fn area(rectangle: &Rectangle) -> u32 {
     rectangle.length * rectangle.width
 }
 ```
+
+Rust 并没有一个与->等效的运算符；相反，Rust 有一个叫自动引用和解引用（automatic referencing and dereferencing）的功能。方法调用是 Rust 中少数几个拥有这种行为的地方。
+
+### 5.2 Associated Functions
+
+允许在impl块中定义不以self作为参数的函数。
+
+```rust
+impl Rectangle {
+    fn square(size: u32) -> Rectangle {
+        Rectangle { length: size, width: size }
+    }
+}
+```
+
+备注：在rust中不仅仅strut可以定义方法，enum也可以定义相关方法。
+
+## 6. Enums and Pattern Matching
+
+### 61. Enum
+定义：
+
+```rust
+enum IpAddrKind {
+    V4,
+    V6,
+} 
+
+let four = IpAddrKind::V4;
+let six = IpAddrKind::V6;
+
+// 添加ipaddr后的定义：
+struct IpAddr {
+    kind: IpAddrKind,
+    address: String,
+}
+
+// 或者以下方式更简洁：
+enum IpAddr {
+    V4(String),
+    V6(String),
+}
+```
+
+使用枚举而不是结构体还有另外一个优势：每个成员可以处理不同类型和数量的数据。
+
+```rust
+enum IpAddr {
+    V4(u8, u8, u8, u8),
+    V6(String),
+}
+
+
+// rust 标准库中的实现：
+
+pub enum IpAddr {
+    V4(Ipv4Addr),  // Ipv4Addr struct 传入 4 个字节
+    V6(Ipv6Addr),  // Ipv6Addr struct 传入 6 个字节
+}
+
+```
+
+在 enum 上定义方法：
+
+```rust
+enum Message {
+     Quit,
+     Move { x: i32, y: i32 },
+     Write(String),
+     ChangeColor(i32, i32, i32),
+}
+
+impl Message {
+    fn call(&self) {
+        // method body would be defined here
+    }
+}
+
+let m = Message::Write(String::from("hello"));
+m.call();
+
+```
+
+#### 特殊枚举  Option
+
+Option： 是一个值，可能是某个值或者什么都不是， 类似于 python 中 null
+
+标准库中的定义：
+
+```rust
+enum Option<T> { // T 泛型类型参数, 等同于C++中的模板
+    Some(T),
+    None,
+}
+
+let x: Option<u32> = Some(2);
+assert_eq!(x.is_some(), true);
+
+let x: Option<u32> = None;
+assert_eq!(x.is_some(), false);
+
+```
+
+Option<T> 和 T 不是同等类型，不能够直接交替使用，需要使用 Option 的 [expect](https://doc.rust-lang.org/std/option/enum.Option.html#method.expect) 函数转成 T，才可以使用、
+
+### 6.2 The match Control Flow Operator
+
+```rust
+
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter,
+}
+
+fn value_in_cents(coin: Coin) -> i32 {
+    match coin {
+        Coin::Penny => {
+            println!("Lucky penny!");
+            1
+        },
+        
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter => 25,
+    }
+}
+
+```
+
+#### 绑定值的模式
+可以绑定匹配的模式的部分值。这也就是如何从枚举成员中提取值。
+
+```rust
+# #[derive(Debug)]
+# enum UsState {
+#    Alabama,
+#    Alaska,
+# }
+#
+# enum Coin {
+#    Penny,
+#    Nickel,
+#    Dime,
+#    Quarter(UsState),
+# }
+#
+fn value_in_cents(coin: Coin) -> i32 {
+    match coin {
+        Coin::Penny => 1,
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter(state) => {
+            println!("State quarter from {:?}!", state);
+            25
+        },
+    }
+}
+
+```
+
+#### 匹配Option<T>
+
+```rust
+
+fn plus_one(x: Option<i32>) -> Option<i32> {
+    match x {
+        None => None,
+        Some(i) => Some(i + 1),
+    }
+}
+
+```
+
+#### _ 通配符
+
+```rust
+let some_u8_value = 0u8;
+match some_u8_value {
+    1 => println!("one"),
+    3 => println!("three"),
+    5 => println!("five"),
+    7 => println!("seven"),
+    _ => (),
+}
+```
+
+
+### 6.3 if let
+
+```rust
+
+let some_u8_value = Some(0u8);
+match some_u8_value {
+    Some(3) => println!("three"),
+    _ => (),
+}
+
+// 使用简化模式可以简写如下：
+
+if let Some(3) = some_u8_value {
+    println!("three");
+}
+
+```
+
+
 
 
 
