@@ -975,27 +975,27 @@ if let Some(3) = some_u8_value {
 Vector: Vec<T>, vector 只能储存相同类型的值，如果有不同类型的场景可以使用 enum 来进行封装。
 
 ```rust
-	let v: Vec<i32> = Vec::new();  // 添加 <i32> 作为类型说明
+let v: Vec<i32> = Vec::new();  // 添加 <i32> 作为类型说明
 	
-	或者使用宏 vec! 在声明时候定义
-	let v = vec![1, 2, 3]; 
+或者使用宏 vec! 在声明时候定义
+let v = vec![1, 2, 3]; 
 	
-	或者
+或者
 	
-	let mut v = Vec::new();
-	v.push(5);  // rust 会根据 push 的类型来推断
+let mut v = Vec::new();
+v.push(5);  // rust 会根据 push 的类型来推断
 ```
 
 #### 读取 vector 元素：
 
 ```rust
-	let v = vec![1, 2, 3, 4, 5];
+let v = vec![1, 2, 3, 4, 5];
 	
-	let third: &i32 = &v[2]; // 索引从 0 开始
-	let third: Option<&i32> = v.get(2);  // fn get<I>(&self, index: I) -> Option<&I::Output> 
+let third: &i32 = &v[2]; // 索引从 0 开始
+let third: Option<&i32> = v.get(2);  // fn get<I>(&self, index: I) -> Option<&I::Output> 
 	
-	let does_not_exist = &v[100];		 // 直接 panic!
-	let does_not_exist = v.get(100);  // 返回 None 但是不 panic
+let does_not_exist = &v[100];		 // 直接 panic!
+let does_not_exist = v.get(100);  // 返回 None 但是不 panic
 ```
 
 #### 使用枚举来储存多种类型
@@ -1102,7 +1102,7 @@ scores.insert(String::from("Yellow"), 50);
 
 #### Hash Maps && Ownship
 
-```
+```rust
 use std::collections::HashMap;
 
 let field_name = String::from("Favorite color");
@@ -1112,13 +1112,11 @@ let mut map = HashMap::new();
 map.insert(field_name, field_value);
 // Notice: field_name and field_value are invalid at this point
 
-访问：
-
+//访问：
 let team_name = String::from("Blue");
 let score = scores.get(&team_name);
 
-遍历：
-
+// 遍历：
 for (key, value) in &map {
     println!("{}: {}", key, value);
 }
@@ -1135,7 +1133,7 @@ scores.entry(String::from("Yellow")).or_insert(50);
 
 let count = map.entry(word).or_insert(0);
 
-// r_insert方法事实上会返回这个键的值的一个可变引用（&mut V）, 需要 * 解引用
+// or_insert方法事实上会返回这个键的值的一个可变引用（&mut V）, 需要 * 解引用
 *count += 1;
 ```
 
