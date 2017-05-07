@@ -429,10 +429,10 @@ Ownership 是 Rust 最独特的功能，它使得 Rust 可以无需垃圾回收�
 #### Ways Variables and Data Interact: Move (Shallow Copy)
 
 ```rust
-	let x = 5;
-	let y = x;  
+let x = 5;
+let y = x;  
 	
-	println!("x {} y {}", x,y)  // 因为x, y都为简单类型 scalar，分配在栈中，所以 x,y 仍然可以用
+println!("x {} y {}", x,y)  // 因为x, y都为简单类型 scalar，分配在栈中，所以 x,y 仍然可以用
 ```
 
 ```rust
@@ -968,6 +968,176 @@ if let Some(3) = some_u8_value {
 
 ```
 
+## 8. Common Collection
+
+### 8.1 Vector
+
+Vector: Vec<T>, vector 只能储存相同类型的值，如果有不同类型的场景可以使用 enum 来进行封装。
+
+```rust
+	let v: Vec<i32> = Vec::new();  // 添加 <i32> 作为类型说明
+	
+	或者使用宏 vec! 在声明时候定义
+	let v = vec![1, 2, 3]; 
+	
+	或者
+	
+	let mut v = Vec::new();
+	v.push(5);  // rust 会根据 push 的类型来推断
+```
+
+#### 读取 vector 元素：
+
+```rust
+	let v = vec![1, 2, 3, 4, 5];
+	
+	let third: &i32 = &v[2]; // 索引从 0 开始
+	let third: Option<&i32> = v.get(2);  // fn get<I>(&self, index: I) -> Option<&I::Output> 
+	
+	let does_not_exist = &v[100];		 // 直接 panic!
+	let does_not_exist = v.get(100);  // 返回 None 但是不 panic
+```
+
+#### 使用枚举来储存多种类型
+
+```rust
+
+enum SpreadsheetCell {
+    Int(i32),
+    Float(f64),
+    Text(String),
+}
+
+let row = vec![
+    SpreadsheetCell::Int(3),
+    SpreadsheetCell::Text(String::from("blue")),
+    SpreadsheetCell::Float(10.12),
+];
+```
+
+
+### 8.2 Strings
+
+Rust 的核心语言中事实上就只有一种字符串类型：str，字符串 slice通常以被借用&str的形式出现。String的类型是由标准库提供的，它是可增长的、可变的、有所有权的、UTF-8 编码的字符串类型。
+
+#### 新建字符串
+
+```rust
+
+let s = String::new();
+
+
+let data = "initial contents";
+let s = data.to_string();
+
+let s = String::from("initial contents");
+```
+
+
+#### 更新字符串
+
+```rust
+let mut s = String::from("foo");
+s.push_str("bar");
+
+或：
+
+let mut s1 = String::from("foo");
+let s2 = String::from("bar");
+s1.push_str(&s2);
+
+
+let s1 = String::from("Hello, ");
+let s2 = String::from("world!");
+ 
+ // Note that s1 has been moved here and can no longer be used, call: fn add(self, s: &str) -> String {...}
+// &s2是因为&String可以被强转（coerced）成 &str
+let s3 = s1 + &s2;
+
+// 使用 format! 拼接
+let s1 = String::from("tic");
+let s2 = String::from("tac");
+let s3 = String::from("toe");
+
+let s = format!("{}-{}-{}", s1, s2, s3);
+```
+
+
+#### 索引字符串
+
+Rust 的字符串不支持索引。
+
+```rust
+
+let s1 = String::from("hello");
+let h = s1[0]; // Error note: the type `std::string::String` cannot be indexed by `_`
+```
+
+这是因为 String 为 Vec<u8> 的封装，String 采用 Unicode 进行编码，如果按照 index 访问，那么返回的byte将可能不是一个合法的字符。
+
+
+#### 遍历 strings 的方法
+
+```rust
+for c in "नमस्ते".chars() {
+    println!("{}", c);
+}
+```
+
+
+### 8.3 Hash Maps
+
+结构： HashMap<K, V>, HashMap是同质的：所有的键必须是相同类型，值也必须都是相同类型， 数据和 Vector 一样，存放在 Heap 上。
+
+#### 新建一个 HashMap
+
+```rust
+use std::collections::HashMap;
+
+let mut scores = HashMap::new();
+
+scores.insert(String::from("Blue"), 10);
+scores.insert(String::from("Yellow"), 50);
+```
+
+#### Hash Maps && Ownship
+
+```
+use std::collections::HashMap;
+
+let field_name = String::from("Favorite color");
+let field_value = String::from("Blue");
+
+let mut map = HashMap::new();
+map.insert(field_name, field_value);
+// Notice: field_name and field_value are invalid at this point
+
+访问：
+
+let team_name = String::from("Blue");
+let score = scores.get(&team_name);
+
+遍历：
+
+for (key, value) in &map {
+    println!("{}: {}", key, value);
+}
+```
+
+#### Update Hash Map
+
+```rust
+scores.insert(String::from("Blue"), 10);
+scores.insert(String::from("Blue"), 25);
+
+// 只在键没有对应值时插入, entry 返回值是一个枚举
+scores.entry(String::from("Yellow")).or_insert(50);
+
+let count = map.entry(word).or_insert(0);
+
+// r_insert方法事实上会返回这个键的值的一个可变引用（&mut V）, 需要 * 解引用
+*count += 1;
+```
 
 
 
