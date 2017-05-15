@@ -27,12 +27,13 @@ Version && Doc
 
 第二版图书：
 
-* [Book Eng](http://rust-lang.github.io/book/second-edition/ch01-00-introduction.html)
+* [The Rust Programming Language 2th](http://rust-lang.github.io/book/second-edition/ch01-00-introduction.html)
 * [Rust 程序设计语言（第二版）](https://kaisery.gitbooks.io/trpl-zh-cn/content/)
 
 其他相关文档：
 
 * [Rust by Example](http://rustbyexample.com/)
+* [极客学院Rust中文教程](http://wiki.jikexueyuan.com/project/rust-primer/)
 
 ### 2.1 Hello Rust
  	
