@@ -1263,6 +1263,68 @@ fn some_function<T: Display + Clone, U: Clone + Debug>(t: T, u: U) -> i32 {
 }
 ```
 
+### 10.3 Validating References with Lifetimes
+
+生命周期的主要目标是避免悬垂引用，它会导致程序引用了并非其期望引用的数据。
+
+
+#### 生命周期注解语法
+
+```rust
+&i32        // a reference
+&'a i32     // a reference with an explicit lifetime
+&'a mut i32 // a mutable reference with an explicit lifetime
+```
+
+#### 函数签名中的生命周期注解
+
+```rust
+fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+    if x.len() > y.len() {
+        x
+    } else {
+        y
+    }
+}
+```
+
+#### 生命周期省略
+
+被编码进 Rust 引用分析的模式被称为生命周期省略规则（lifetime elision rules）。这并不是需要程序员遵守的规则；这些规则是一系列特定的场景，此时编译器会考虑，如果代码符合这些场景，就不需要明确指定生命周期。
+
+函数或方法的参数的生命周期被称为输入生命周期（input lifetimes），而返回值的生命周期被称为输出生命周期（output lifetimes）。
+
+
+* 每一个是引用的参数都有它自己的生命周期参数。话句话说就是，有一个引用参数的函数有一个生命周期参数：fn foo<'a>(x: &'a i32)，有两个引用参数的函数有两个不同的生命周期参数，fn foo<'a, 'b>(x: &'a i32, y: &'b i32)，依此类推。 [input lifetimes]
+* 如果只有一个输入生命周期参数，那么它被赋给所有输出生命周期参数：fn foo<'a>(x: &'a i32) -> &'a i32。[output lifetimes]
+* 如果方法有多个输入生命周期参数，不过其中之一因为方法的缘故是&self或&mut self，那么self的生命周期被赋给所有输出生命周期参数。这使得方法写起来更简洁。[output lifetimes]
+
+
+#### 静态生命周期
+
+有一种特殊的生命周期值得讨论：'static。'static生命周期存活于整个程序期间。所有的字符串字面值都拥有'static生命周期，我们也可以选择像下面这样标注出来：
+
+```rust
+let s: &'static str = "I have a static lifetime.";
+```
+
+综合样例：
+
+```rust
+use std::fmt::Display;
+
+fn longest_with_an_announcement<'a, T>(x: &'a str, y: &'a str, ann: T) -> &'a str
+    where T: Display
+{
+    println!("Announcement! {}", ann);
+    if x.len() > y.len() {
+        x
+    } else {
+        y
+    }
+}
+```
+
 
 
 
