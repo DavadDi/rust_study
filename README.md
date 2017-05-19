@@ -1655,9 +1655,5 @@ fn main() {
 }
 ```
 
-Related:
-
-* [Log All Query in mysql](http://stackoverflow.com/questions/303994/log-all-queries-in-mysql/14403905#14403905)
-* [Docker创建JIRA 7.2.7中文破解版](http://idoall.org/blog/post/lion/17)
 
 
