@@ -1325,6 +1325,339 @@ fn longest_with_an_announcement<'a, T>(x: &'a str, y: &'a str, ann: T) -> &'a st
 }
 ```
 
+## 12. An IO Project
 
+[工程源码](https://github.com/DavadDi/rust_study/tree/master/greprs)
+
+## 13. Iterators && Closures
+
+### 13.1 Closures
+
+```rust
+fn main() {
+    let calculate = |a, b| { // 闭包的参数位于竖线之间（|）
+        let mut result = a * 2;
+
+        result += b;
+
+        result
+    };
+    
+    // let add_one = |x: i32| -> i32 { x + 1 }; // 闭包的类型注解版，一般情况下不需要
+
+    assert_eq!(7, calculate(2, 3)); // 2 * 2 + 3 == 7
+    assert_eq!(13, calculate(4, 5)); // 4 * 2 + 5 == 13
+}
+```
+
+闭包和函数对比：
+
+```rust
+fn  add_one_v1   (x: i32) -> i32 { x + 1 }  // a function
+let add_one_v2 = |x: i32| -> i32 { x + 1 }; // the full syntax for a closure
+let add_one_v3 = |x|             { x + 1 }; // a closure eliding types
+let add_one_v4 = |x|               x + 1  ; // without braces
+```
+
+闭包与函数语法不同还有另一个原因是，它与函数有着不同的行为：闭包拥有其环境（上下文）。
+
+
+闭包可以引用其环境
+
+```rust
+fn main() {
+    let x = 4;
+
+    fn equal_to_x(z: i32) -> bool { z == x } // 闭包允许使用包含他们的作用域的变量, 比如 x
+
+    let y = 4;
+
+    assert!(equal_to_x(y));
+}
+```
+
+
+### 13.2 Iterators
+
+```rust
+let v1 = vec![1, 2, 3];
+
+let v2: Vec<i32> = v1.iter().map(|x| x + 1).collect(); // collect方法消费了迭代器并将其元素存放到一个新的数据结构中
+
+assert_eq!(v2, [2, 3, 4]);
+
+```
+
+以上代码做了以下工作：
+
+1. 从 vector 中创建了一个迭代器。
+2. 使用map适配器和一个闭包参数对每一个元素加一。
+3. 使用collect适配器来消费迭代器并生成了一个新的 vector。
+
+map适配（adapts）了一个迭代器，而collect消费（consumes）了一个迭代器。这是有意为之的。单独的迭代器并不会做任何工作；他们是惰性的。
+
+
+#### Iterator trait
+
+```rust
+trait Iterator {
+    type Item; // type Item和Self::Item定义了这个 trait 的关联类型（associated type）
+
+    fn next(&mut self) -> Option<Self::Item>;
+}
+```
+
+使用 Iterator 改进的 I/O 项目 见：
+
+[源码](https://github.com/DavadDi/rust_study/tree/2d951dfd82b06e1cce353c002d6e7daebe1e13c4/greprs)
+
+
+#### 性能
+
+闭包和迭代器是 Rust 受函数式编程语言观念所启发的功能。他们对 Rust 直白的表达高级概念的能力有很大贡献。闭包和迭代器的实现，以及 Rust 的零成本抽象，也使得运行时性能不受影响。
+
+
+## 15. Smart Pointers
+
+* Box\<T>，用于在堆上分配值
+* Rc\<T>，一个引用计数类型，其数据可以有多个所有者
+* RefCell\<T>，其本身并不是智能指针，不过它管理智能指针Ref和RefMut的访问，在运行时而不是在编译时执行借用规则。
+
+在 Rust 中，普通引用和智能指针的一个额外的区别是引用是一类只借用数据的指针；相反大部分情况，智能指针拥有他们指向的数据。智能指针区别于常规结构体的特性在于他们实现了Deref和Drop trait。
+
+
+### 15.1 Box\<T>
+
+最简单直接的智能指针是 box，它的类型是Box<T>。 box 允许你将一个值放在堆上。
+
+```rust
+enum List {
+    Cons(i32, Box<List>),
+    Nil,
+}
+
+use List::{Cons, Nil};
+
+fn main() {
+    let list = Cons(1,
+        Box::new(Cons(2,
+            Box::new(Cons(3,
+                Box::new(Nil))))));
+}
+```
+
+
+### 15.2 Deref Trait
+
+ 第一个智能指针相关的重要 trait 是Deref，它允许我们重载*，解引用运算符（不同于乘法运算符和全局引用运算符）。
+ 
+引用并不是智能指针，他们只是引用指向的一个值，所以这个解引用操作是很直接的。智能指针还会储存指针或数据的元数据。当解引用一个智能指针时，我们只想要数据，而不需要元数据。我们希望能在使用常规引用的地方也能使用智能指针。为此，可以通过实现Deref trait 来重载*运算符的行为。
+
+```rust
+se std::ops::Deref;
+
+struct Mp3 {
+    audio: Vec<u8>,
+    artist: Option<String>,
+    title: Option<String>,
+}
+
+impl Deref for Mp3 {
+    type Target = Vec<u8>;
+
+    fn deref(&self) -> &Vec<u8> {
+        &self.audio
+    }
+}
+
+fn main() {
+    let my_favorite_song = Mp3 {
+        // we would read the actual audio data from an mp3 file
+        audio: vec![1, 2, 3],
+        artist: Some(String::from("Nirvana")),
+        title: Some(String::from("Smells Like Teen Spirit")),
+    };
+
+    assert_eq!(vec![1, 2, 3], *my_favorite_song);
+}
+```
+
+#### 函数和方法的隐式解引用强制多态
+
+函数和方法的参数的解引用强制多态（deref coercions）。解引用强制多态会自动的将 **指针或智能指针的引用** 转换为指针内容的引用。解引用强制多态发生于当传递给函数的参数类型不同于函数签名中定义参数类型的时候。解引用强制多态的加入使得 Rust 调用函数或方法时无需很多使用&和*的引用和解引用。
+
+
+例如：
+
+```rust
+fn compress_mp3(audio: &[u8]) -> Vec<u8> {
+    // the actual implementation would go here
+}
+
+let result = compress_mp3(&my_favorite_song); // 直接用 解引用强制多态
+```
+
+Rust 在发现类型和 trait 实现满足三种情况时会进行解引用强制多态：
+
+* 从&T到&U当T: Deref<Target=U>。
+* 从&mut T到&mut U当T: DerefMut<Target=U>。
+* 从&mut T到&U当T: Deref<Target=U>。
+
+
+### 15.3 Drop Trait
+
+Drop运行我们在值要离开作用域时执行一些代码。 == C++ 的析构函数。
+
+```rust
+struct CustomSmartPointer {
+    data: String,
+}
+
+impl Drop for CustomSmartPointer {
+    fn drop(&mut self) {
+        println!("Dropping CustomSmartPointer!");
+    }
+}
+
+fn main() {
+    let c = CustomSmartPointer { data: String::from("some data") };
+    println!("CustomSmartPointer created.");
+    println!("Wait for it...");
+}
+```
+
+### 15.4 Rc\<T>
+
+引用计数（reference counting）的缩写。
+
+注意Rc<T>只能用于单线程场景；下一章并发会涉及到如何在多线程程序中进行引用计数。如果尝试在多线程中使用Rc<T>则会得到一个编译错误。
+
+
+### 15.5 RefCell\<T>
+
+内部可变性（Interior mutability）是 Rust 中的一个设计模式，它允许你即使在有不可变引用时改变数据，这通常是借用规则所不允许。内部可变性模式涉及到在数据结构中使用unsafe代码来模糊 Rust 通常的可变性和借用规则。
+
+
+内部可变性（Interior mutability）是 Rust 中的一个设计模式，它允许你即使在有不可变引用时改变数据，这通常是借用规则所不允许。内部可变性模式涉及到在数据结构中使用unsafe代码来模糊 Rust 通常的可变性和借用规则。
+
+类似于Rc<T>，RefCell<T>只能用于单线程场景。
+
+
+#### 结合Rc<T>和RefCell<T>来拥有多个可变数据所有者
+
+可以将Rc<T>与RefCell<T>结合来创造一个既有引用计数又可变的类型。
+
+```rust
+let value = Rc::new(RefCell::new(5));
+```
+
+todo.... weak\<T>, 避免引用循环
+
+
+## 16. Fearless Concurrency
+
+### 16.1 Thread
+
+```rust
+use std::thread;
+
+fn main() {
+    let v = vec![1, 2, 3];
+
+    let handle = thread::spawn(move || {
+        println!("Here's a vector: {:?}", v);
+    });
+
+    handle.join();
+}
+```
+
+
+通过在闭包之前增加move关键字，我们强制闭包获取它使用的值的所有权，而不是引用借用。
+
+
+### 16.2 Message Passing
+
+use std::thread;
+use std::sync::mpsc;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        let val = String::from("hi");
+        tx.send(val).unwrap();
+    });
+
+    let received = rx.recv().unwrap();
+    println!("Got: {}", received);
+}
+```
+
+mpsc是多个生产者，单个消费者（multiple producer, single consumer）的缩写。
+
+
+### 16.3  Shared State
+
+#### Mutex\<T>
+
+
+```rust
+use std::sync::Mutex;
+use std::thread;
+
+fn main() {
+    let counter = Mutex::new(0);
+    let mut handles = vec![];
+
+    for _ in 0..10 {
+        let handle = thread::spawn(|| {
+            let mut num = counter.lock().unwrap();
+
+            *num += 1;
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    println!("Result: {}", *counter.lock().unwrap());
+}
+```
+
+#### 原子引用计数 Arc<T>
+
+```rust
+use std::sync::{Mutex, Arc};
+use std::thread;
+
+fn main() {
+    let counter = Arc::new(Mutex::new(0));
+    let mut handles = vec![];
+
+    for _ in 0..10 {
+        let counter = counter.clone();
+        let handle = thread::spawn(move || {
+            let mut num = counter.lock().unwrap();
+
+            *num += 1;
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    println!("Result: {}", *counter.lock().unwrap());
+}
+```
+
+Related:
+
+* [Log All Query in mysql](http://stackoverflow.com/questions/303994/log-all-queries-in-mysql/14403905#14403905)
+* [Docker创建JIRA 7.2.7中文破解版](http://idoall.org/blog/post/lion/17)
 
 
